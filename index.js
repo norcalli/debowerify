@@ -5,7 +5,9 @@ var path = require('path');
 var through = require('through');
 var falafel = require('falafel');
 
-function doit(file, regex) {
+function debowerify(file) {
+  var pattern = '\\.(' + debowerify.extensions.join('|') + ')$';
+  var regex = new RegExp(pattern);
   if (!regex.test(file)) return through();
   var data = '';
 
@@ -51,7 +53,7 @@ function doit(file, regex) {
       for (var name in module[property]) dependencies[name] = module[property][name];
       return dependencies;
     }, {});
-  };
+  }
 
   /**
    * @param {string} name
@@ -65,7 +67,7 @@ function doit(file, regex) {
       var module = dependencies[name] || getModule(name, dependencies[dependencyName]);
       if (module) return module;
     }
-  };
+  }
 
   function parse () {
     var output = falafel(data, function (node) {
@@ -105,35 +107,19 @@ function doit(file, regex) {
     });
 
     function getModuleName(path){
-      return path.split('/')[0]
+      return path.split('/')[0];
     }
 
     function getModuleSubPath(path){
-      var idx = path.indexOf('/')
-      if (idx === -1) return null
-      return path.substring(idx)
+      var idx = path.indexOf('/');
+      if (idx === -1) return null;
+      return path.substring(idx);
     }
 
     return output;
   }
-};
+}
 
-module.exports = function (x) {
-  if (typeof x === 'string') {
-    return doit(x, /\.(js|jsx|(lit)?coffee(\\.md)?|ls|ts)$/);
-  }
-  var pattern = 'js|jsx|(lit)?coffee(\\.md)?|ls|ts', n = x.length;
+debowerify.extensions = ['js', 'jsx', '(lit)?coffee(\\.md)?', 'ls', 'ts'];
 
-  while (n--) {
-    var filename = x[n];
-    if (filename[0] == '.')
-      pattern += '|' + filename.slice(1);
-    else
-      pattern += '|' + filename;
-  }
-  pattern = '\\.(' + pattern + ')$';
-  var regex = new RegExp(pattern);
-  return function(file) {
-    return doit(file, regex);
-  };
-};
+module.exports = debowerify;

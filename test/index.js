@@ -40,7 +40,8 @@ describe('debowerify', function() {
     var jsPath = path.join(__dirname, '..', 'public', 'index.chicken');
     var b = browserify();
     b.add(jsPath);
-    b.transform(debowerify(['.chicken']));
+    debowerify.extensions.push('chicken');
+    b.transform(debowerify);
     b.bundle(function (err, src) {
       if (err) return done(err);
       vm.runInNewContext(src, {
