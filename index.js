@@ -5,27 +5,12 @@ var path = require('path');
 var through = require('through');
 var falafel = require('falafel');
 
-var defaultPattern = "\.(js|jsx|(lit)?coffee(\.md)?|ls|ts)"
-var defaultRegex = new RegExp(defaultPattern);
-module.exports = function (file) {
+function doit(file, regex) {
+  if (!regex.test(file)) return through();
   var data = '';
-  if (typeof file === 'string') {
-    if (!defaultRegex.test(file)) return through();
 
-    var tr = through(write, end);
-    return tr;
-  }
-  var pattern = defaultPattern, n = file.length;
-  while (n--) {
-    pattern += '|' + file[n].replace('.', '\.');
-  }
-  var regex = new RegExp(pattern);
-  return function(file) {
-    if (!regex.test(file)) return through();
-
-    var tr = through(write, end);
-    return tr;
-  };
+  var tr = through(write, end);
+  return tr;
 
   function write (buf) { data += buf; }
   function end () {
@@ -131,4 +116,24 @@ module.exports = function (file) {
 
     return output;
   }
+};
+
+module.exports = function (x) {
+  if (typeof x === 'string') {
+    return doit(x, /\.(js|jsx|(lit)?coffee(\\.md)?|ls|ts)$/);
+  }
+  var pattern = 'js|jsx|(lit)?coffee(\\.md)?|ls|ts', n = x.length;
+
+  while (n--) {
+    var filename = x[n];
+    if (filename[0] == '.')
+      pattern += '|' + filename.slice(1);
+    else
+      pattern += '|' + filename;
+  }
+  pattern = '\\.(' + pattern + ')$';
+  var regex = new RegExp(pattern);
+  return function(file) {
+    return doit(file, regex);
+  };
 };
